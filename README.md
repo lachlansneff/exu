@@ -8,3 +8,7 @@
 2. Sandboxed without overhead.
 3. Standardized, strongly versioned API
 4. Architecture independent.
+
+
+
+The format of .exu files is described in [format.md](format.md).

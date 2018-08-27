@@ -42,7 +42,7 @@ All Universal Executables start with a header.
 #[repr(C, packed)]
 struct ExuHeader {
     magic: [u8; 4], 	 // ['E', 'X', 'U', '\0']
-   	version: (u16, u16), // exu format version
+    version: (u16, u16), // exu format version
     fs_size: u64,		 // size of the included filesystem
     db_size: u64,		 // size of the included filesystem
 }

@@ -8,6 +8,8 @@ The general format for universal executables is:
 +--------------+
 |   fs header  |
 +--------------+
+|   db header  |
++--------------+
 
 ## COMPRESSED #####
                   #
@@ -24,6 +26,20 @@ The general format for universal executables is:
 +--------------+  #
 |     name     |  #
 |    section   |  #
++--------------+  #
+|              |  #
+|     data     |  #
+|    section   |  #
+|              |  #
++--------------+  #
+                  #
+## COMPRESSED #####
+                  #
++--------------+  #
+|              |  #
+|   db_entry   |  #
+|    section   |  #
+|              |  #
 +--------------+  #
 |              |  #
 |     data     |  #
@@ -54,11 +70,22 @@ This is immediately followed by the file system header (single byte alignment).
 #[repr(C, packed)]
 struct FileSystemHeader {
     magic: [u8; 6], 		// ['E', 'X', 'U', 'F', 'S', '\0']
-    compressed_fs_len: u64, // size of uncompressed fs (in bytes)
+    compressed_size: u64, 	// size of compressed fs (in bytes)
     num_dir_headers: u64,	// total number of directory headers
     num_file_headers: u64,	// total number of file headers
     name_section_len: u64,	// size of name section (uncompressed)
     data_section_len: u64,	// size of data section (uncompressed)
+}
+```
+
+The filesystem header is followed by the database header.
+
+```rust
+#[repr(C, packed)]
+struct DatabaseHeader {
+	magic: [u8; 6],			// ['E', 'X', 'U', 'D', 'B', '\0']
+    compressed_size: u64,	// size of compressed db (in bytes)
+    num_entries: u64,		// total number of database entries.
 }
 ```
 
@@ -100,3 +127,20 @@ union FileUnion {
 The next section is the name section. This consists of all the names of directories and files concatenated together without padding. They are **not** null-terminated.
 
 The last section of the filesystem is the data section. This consists all the data in all the files concatenated together without padding.
+
+
+
+The compressed filesystem is followed by the database (compressed with Brotli) if the `num_entries` field of the `DatabaseHeader` is greater than `0.`
+
+The db_entry section is an array of `DatabaseEntry` structs written in a packed manner.
+
+```rust
+#[repr(C, packed)]
+struct DatabaseEntry {
+    key_offset: u64,	// offset of the key in the data section
+    key_len: u64,		// length of the key in bytes
+    value_offset: u64,	// offset of the value in the data section
+    value_len: u64,		// length of the value in bytes
+}
+```
+
